@@ -1,0 +1,52 @@
+name: pr
+
+on:
+  workflow_dispatch:
+
+env:
+    collector-url: lcedt.fatcowshrine.com
+    otel-service-name: build-test
+
+jobs:
+  build:
+    runs-on: ubuntu:latest
+    container:
+      image: rapidsai/ci-conda
+    steps:
+      - name: Checkout code repo
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Install OpenTelemetry instrumentation
+        run: |
+          pip install opentelemetry-distro[otlp] opentelemetry-exporter-prometheus
+          opentelemetry-bootstrap -a install
+          curl -L -o otel-cli-amd64.deb https://github.com/equinix-labs/otel-cli/releases/download/v0.4.5/otel-cli_0.4.5_linux_amd64.deb
+          dpkg -i otel-cli-amd64.deb
+          git clone -b add-conda-build-instrumentation https://github.com/msarahan/opentelemetry-python-contrib
+          pip install -e ./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-conda-build
+      - name: Download gha-tools with git clone
+        run: |
+            git clone https://github.com/rapidsai/gha-tools.git -b main /tmp/gha-tools
+            echo "/tmp/gha-tools/tools" >> "${GITHUB_PATH}"
+      - name: Setup telemetry
+        id: setup-telemetry
+        uses: krzko/setup-telemetry@v0.5.4
+        with:
+          observability-backend-url: ${{ env.collector-url }}
+      - name: Run build
+        run: |
+            rapids-conda-retry mambabuild click-feedstock
+      - name: Export job telemetry
+        if: always()
+        uses: krzko/export-job-telemetry@v0.3.0
+        with:
+          created-at: ${{ steps.setup-telemetry.outputs.created-at }}
+          job-status: ${{ job.status }}
+          job-name: ${{ steps.setup-telemetry.outputs.job-name }}
+          otel-exporter-otlp-endpoint: ${{ env.collector-url }}
+          # otel-resource-attributes: "foo.new_attribute=123,${{ env.otel-resource-attributes }}"
+          otel-service-name: ${{ env.otel-service-name }}
+          started-at: ${{ steps.setup-telemetry.outputs.started-at }}
+          traceparent: ${{ steps.setup-telemetry.outputs.traceparent }}
