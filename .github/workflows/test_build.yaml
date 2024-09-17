@@ -47,7 +47,7 @@ jobs:
           pip install -e ./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-conda-build
       - name: Download gha-tools with git clone
         run: |
-            git clone https://github.com/rapidsai/gha-tools.git -b main /tmp/gha-tools
+            git clone https://github.com/msarahan/gha-tools.git -b main /tmp/gha-tools
             echo "/tmp/gha-tools/tools" >> "${GITHUB_PATH}"
       - name: Setup telemetry
         id: setup-telemetry
