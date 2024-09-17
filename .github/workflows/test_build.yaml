@@ -2,6 +2,25 @@ name: pr
 
 on:
   workflow_dispatch:
+    inputs:
+      traces-exporters:
+        description: 'OTEL exporter(s) to use for traces. Comma-separated if more than one.'
+      metrics-exporters:
+        description: 'OTEL exporter(s) to use for metrics. Comma-separated if more than one.'
+      logs-exporters:
+        description: 'OTEL exporter(s) to use for logs. Comma-separated if more than one.'
+      default-endpoint:
+        description: 'Remote destination for all data types. This is superseded by more specific data type endpoint specifications below.'
+        required: false
+      traces-endpoint:
+        description: 'Remote destination for traces. Does not apply to all exporters (e.g. console). Note port and protocol (grpc vs https)'
+        required: false
+      metrics-endpoint:
+        description: 'Remote destination for metrics. Does not apply to all exporters (e.g. console). Note port and protocol (grpc vs https)'
+        required: false
+      logs-endpoint:
+        description: 'Remote destination for logs. Does not apply to all exporters (e.g. console). Note port and protocol (grpc vs https)'
+        required: false
 
 env:
     collector-url: lcedt.fatcowshrine.com
@@ -36,6 +55,16 @@ jobs:
         with:
           observability-backend-url: ${{ env.collector-url }}
       - name: Run build
+        env:
+            TRACEPARENT: ${{ steps.setup-telemetry.outputs.traceparent }}
+            # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ github.event.inputs.traces-endpoint || github.event.inputs.default-endpoint || 'localhost:4317' }}"
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ github.event.inputs.metrics-endpoint || github.event.inputs.default-endpoint || 'localhost:4317' }}"
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint || github.event.inputs.default-endpoint || 'localhost:4317' }}"
+            # These default to "console", so only need to be set for other values
+            RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'console' }}"
+            RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'console' }}"
+            RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'console' }}"
         run: |
             rapids-conda-retry mambabuild click-feedstock
       - name: Export job telemetry
