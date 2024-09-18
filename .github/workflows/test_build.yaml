@@ -23,7 +23,7 @@ on:
         required: false
 
 env:
-    collector-url: lcedt.fatcowshrine.com
+    collector-url: https://lcedt.fatcowshrine.com/otlp-http/
     otel-service-name: build-test
 
 jobs:
@@ -58,14 +58,14 @@ jobs:
         env:
             TRACEPARENT: ${{ steps.setup-telemetry.outputs.traceparent }}
             # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
-            OTEL_EXPORTER_OTLP_ENDPOINT: "${{ github.event.inputs.default-endpoint || 'localhost:4317' }}"
+            OTEL_EXPORTER_OTLP_ENDPOINT: "${{ github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ github.event.inputs.traces-endpoint }}"
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ github.event.inputs.metrics-endpoint }}"
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint }}"
             # These default to "console", so only need to be set for other values
-            RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'console' }}"
-            RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'console' }}"
-            RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'console' }}"
+            RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'console,otlp' }}"
+            RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'console,otlp' }}"
+            RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'console,otlp' }}"
         run: |
             rapids-conda-retry mambabuild click-feedstock
       - name: Export job telemetry
