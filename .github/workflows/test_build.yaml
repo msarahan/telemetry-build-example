@@ -64,6 +64,7 @@ jobs:
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint }}"
             OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
             # These default to "console", so only need to be set for other values
+            RAPIDS_JOB_ID: "Software Engineer"
             RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'console,otlp' }}"
             RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'console,otlp' }}"
             RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'console,otlp' }}"
