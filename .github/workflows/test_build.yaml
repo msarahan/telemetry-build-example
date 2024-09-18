@@ -59,9 +59,9 @@ jobs:
             TRACEPARENT: ${{ steps.setup-telemetry.outputs.traceparent }}
             # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
             OTEL_EXPORTER_OTLP_ENDPOINT: "${{ github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
-            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ github.event.inputs.traces-endpoint }}"
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ github.event.inputs.metrics-endpoint }}"
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint }}"
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ github.event.inputs.traces-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ github.event.inputs.metrics-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
             OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
             # These default to "console", so only need to be set for other values
             RAPIDS_JOB_ID: "Software Engineer"
