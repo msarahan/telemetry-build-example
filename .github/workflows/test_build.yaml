@@ -23,7 +23,7 @@ on:
         required: false
 
 env:
-    collector-url: https://lcedt.fatcowshrine.com/otlp-http/
+    collector-url: lcedt.fatcowshrine.com:443/otlp-http/
     otel-service-name: build-test
 
 jobs:
@@ -63,9 +63,9 @@ jobs:
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ github.event.inputs.metrics-endpoint }}"
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint }}"
             # These default to "console", so only need to be set for other values
-            RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'console,otlp' }}"
-            RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'console,otlp' }}"
-            RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'console,otlp' }}"
+            RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'console,otlphttp' }}"
+            RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'console,otlphttp' }}"
+            RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'console,otlphttp' }}"
         run: |
             rapids-conda-retry mambabuild click-feedstock
       - name: Export job telemetry
