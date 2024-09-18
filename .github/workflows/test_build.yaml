@@ -24,7 +24,7 @@ on:
 
 env:
     collector-url: lcedt.fatcowshrine.com:443/otlp-http/
-    otel-service-name: build-test
+    otel-service-name: rapids-build-test
 
 jobs:
   build:
@@ -67,6 +67,7 @@ jobs:
             RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'console,otlp' }}"
             RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'console,otlp' }}"
             RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'console,otlp' }}"
+            RAPIDS_OTEL_SERVICE_NAME: "${{ env.otel-service-name }}"
 
         run: |
             rapids-conda-retry mambabuild click-feedstock
