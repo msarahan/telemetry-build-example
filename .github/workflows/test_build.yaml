@@ -71,7 +71,7 @@ jobs:
             RAPIDS_OTEL_SERVICE_NAME: "${{ env.otel-service-name }}"
 
         run: |
-            rapids-conda-retry mambabuild click-feedstock
+            rapids-conda-retry build click-feedstock
       - name: Export job telemetry
         if: always()
         uses: krzko/export-job-telemetry@v0.3.0
