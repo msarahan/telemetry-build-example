@@ -63,7 +63,7 @@ jobs:
             OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ github.event.inputs.metrics-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/prometheus/' }}"
             OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/fluentbit/' }}"
             OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-            OTEL_EXPORTER_OTLP_HEADERS: "${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}"
+            OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
             # These default to "console", so only need to be set for other values
             RAPIDS_JOB_ID: "Software Engineer"
             RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'console,otlp' }}"
