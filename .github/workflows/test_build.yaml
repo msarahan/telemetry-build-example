@@ -66,9 +66,9 @@ jobs:
             OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
             # These default to "console", so only need to be set for other values
             RAPIDS_JOB_ID: "Software Engineer"
-            RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'otlp' }}"
-            RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'otlp' }}"
-            RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'otlp' }}"
+            RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'otlp,console' }}"
+            RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'otlp,console' }}"
+            RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'otlp,console' }}"
             RAPIDS_OTEL_SERVICE_NAME: "${{ env.otel-service-name }}"
 
         run: |
@@ -85,3 +85,4 @@ jobs:
           otel-service-name: ${{ env.otel-service-name }}
           started-at: ${{ steps.setup-telemetry.outputs.started-at }}
           traceparent: ${{ steps.setup-telemetry.outputs.traceparent }}
+          otel-exporter-otlp-headers: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
