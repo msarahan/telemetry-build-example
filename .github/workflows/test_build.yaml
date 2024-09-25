@@ -54,22 +54,38 @@ jobs:
         uses: krzko/setup-telemetry@v0.5.4
         with:
           observability-backend-url: ${{ env.collector-url }}
+      - name: Write certificate files
+        run: |
+          mkdir -p /tmp/certs
+          cat << EOF > /tmp/certs/ca.crt
+          ${{ secrets.OTEL_EXPORTER_OTLP_CERTIFICATE }}
+          EOF
+          cat << EOF > /tmp/certs/client.crt
+          ${{ secrets.OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE }}
+          EOF
+          cat << EOF > /tmp/certs/client.key
+          ${{ secrets.OTEL_EXPORTER_OTLP_CLIENT_KEY }}
+          EOF
       - name: Run build
         env:
             TRACEPARENT: ${{ steps.setup-telemetry.outputs.traceparent }}
             # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
             OTEL_EXPORTER_OTLP_ENDPOINT: "${{ github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
-            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ github.event.inputs.traces-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ github.event.inputs.metrics-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/' }}"
+            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ github.event.inputs.traces-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/v1/traces' }}"
+            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ github.event.inputs.metrics-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/v1/metrics' }}"
+            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ github.event.inputs.logs-endpoint || github.event.inputs.default-endpoint || 'https://lcedt.fatcowshrine.com/otlp-http/v1/logs' }}"
             OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
             OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+            OTEL_EXPORTER_OTLP_CERTIFICATE: "/tmp/certs/ca.crt"
+            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: "/tmp/certs/client.crt"
+            OTEL_EXPORTER_OTLP_CLIENT_KEY: "/tmp/certs/client.key"
             # These default to "console", so only need to be set for other values
             RAPIDS_JOB_ID: "Software Engineer"
             RAPIDS_OTEL_TRACES_EXPORTER: "${{ github.event.inputs.traces-exporters || 'otlp,console' }}"
             RAPIDS_OTEL_METRICS_EXPORTER: "${{ github.event.inputs.metrics-exporters || 'otlp,console' }}"
             RAPIDS_OTEL_LOGS_EXPORTER: "${{ github.event.inputs.logs-exporters || 'otlp,console' }}"
             RAPIDS_OTEL_SERVICE_NAME: "${{ env.otel-service-name }}"
+
 
         run: |
             rapids-conda-retry build click-feedstock
