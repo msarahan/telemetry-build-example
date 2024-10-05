@@ -24,7 +24,6 @@ on:
         required: false
 
 env:
-    collector-url: lcedt.fatcowshrine.com:443
     otel-service-name: rapids-build-test
 
 jobs:
@@ -74,7 +73,7 @@ jobs:
           EOF
       - name: Run build
         env:
-            TRACEPARENT: ${{ steps.telemetry-setup.outputs.traceparent }}
+            TRACEPARENT: ${{ needs.telemetry-setup.outputs.traceparent }}
             # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
             OTEL_EXPORTER_OTLP_ENDPOINT: "${{ inputs.default-endpoint }}"
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ inputs.traces-endpoint }}"
