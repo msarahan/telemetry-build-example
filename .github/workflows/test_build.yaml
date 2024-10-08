@@ -93,9 +93,9 @@ jobs:
             OTEL_EXPORTER_OTLP_CLIENT_KEY: "/tmp/certs/client.key"
             # These default to "console", so only need to be set for other values
             RAPIDS_JOB_ID: "Software Engineer"
-            RAPIDS_OTEL_TRACES_EXPORTER: "${{ inputs.traces-exporters || 'otlp,console' }}"
-            RAPIDS_OTEL_METRICS_EXPORTER: "${{ inputs.metrics-exporters || 'otlp,console' }}"
-            RAPIDS_OTEL_LOGS_EXPORTER: "${{ inputs.logs-exporters || 'otlp,console' }}"
+            RAPIDS_OTEL_TRACES_EXPORTER: "${{ inputs.traces-exporters || 'otlp' }}"
+            RAPIDS_OTEL_METRICS_EXPORTER: "${{ inputs.metrics-exporters || 'otlp' }}"
+            RAPIDS_OTEL_LOGS_EXPORTER: "${{ inputs.logs-exporters || 'otlp' }}"
             RAPIDS_OTEL_SERVICE_NAME: "${{ env.otel-service-name }}"
         run: |
             rapids-conda-retry build click-feedstock
