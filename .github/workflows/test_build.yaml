@@ -27,17 +27,9 @@ env:
     otel-service-name: rapids-build-test
 
 jobs:
-  telemetry-setup:
-    runs-on: ubuntu-latest
-    outputs:
-      traceparent: ${{ steps.telemetry-setup.outputs.traceparent }}
-    steps:
-      - name: Telemetry setup
-        id: telemetry-setup
-        uses: msarahan/shared-actions/telemetry-setup@telemetry-summarize
   build:
+    name: "Super Duper Build Job"
     runs-on: ubuntu-latest
-    needs: telemetry-setup
     container:
       image: rapidsai/ci-conda
     steps:
@@ -59,6 +51,13 @@ jobs:
             git clone https://github.com/msarahan/gha-tools.git -b main /tmp/gha-tools
             echo "/tmp/gha-tools/tools" >> "${GITHUB_PATH}"
 
+      - name: Get job traceparent
+        uses: msarahan/shared-actions/telemetry-traceparent@telemetry-summarize
+        id: job-traceparent
+        with:
+            # We could also get the job name from the GHA info JSON provided by shared-actions/telemetry-setup action
+            job_name: "Super Duper Build Test"
+
       - name: Write certificate files
         run: |
           mkdir -p /tmp/certs
@@ -71,9 +70,17 @@ jobs:
           cat << EOF > /tmp/certs/client.key
           ${{ secrets.OTEL_EXPORTER_OTLP_CLIENT_KEY }}
           EOF
+
+      - name: Get build step traceparent
+        uses: msarahan/shared-actions/telemetry-traceparent@telemetry-summarize
+        id: build-step-traceparent
+        with:
+            # We could also get the job name from the GHA info JSON provided by shared-actions/telemetry-setup action
+            job_name: "Super Duper Build Test"
+            step_name: "Run build"
       - name: Run build
         env:
-            TRACEPARENT: ${{ needs.telemetry-setup.outputs.traceparent }}
+            TRACEPARENT: ${{ steps.build-step-traceparent.outputs.traceparent }}
             # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
             OTEL_EXPORTER_OTLP_ENDPOINT: "${{ inputs.default-endpoint }}"
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ inputs.traces-endpoint }}"
@@ -90,12 +97,11 @@ jobs:
             RAPIDS_OTEL_METRICS_EXPORTER: "${{ inputs.metrics-exporters || 'otlp,console' }}"
             RAPIDS_OTEL_LOGS_EXPORTER: "${{ inputs.logs-exporters || 'otlp,console' }}"
             RAPIDS_OTEL_SERVICE_NAME: "${{ env.otel-service-name }}"
-
-
         run: |
             rapids-conda-retry build click-feedstock
+
       - name: Test OTel export of job JSON
         uses: msarahan/shared-actions/telemetry-summarize@telemetry-summarize
         with:
             endpoint: ${{ inputs.default-endpoint }}
-            exporters: "otlp"
+            traceparent: ${{ steps.job-traceparent.outputs.traceparent }}
