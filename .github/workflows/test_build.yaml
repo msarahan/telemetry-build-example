@@ -25,6 +25,21 @@ on:
 
 env:
     otel-service-name: rapids-build-test
+    # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
+    OTEL_EXPORTER_OTLP_ENDPOINT: "${{ inputs.default-endpoint }}"
+    OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ inputs.traces-endpoint }}"
+    OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ inputs.metrics-endpoint }}"
+    OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ inputs.logs-endpoint }}"
+    OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
+    OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
+    OTEL_EXPORTER_OTLP_CERTIFICATE: "/tmp/certs/ca.crt"
+    OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: "/tmp/certs/client.crt"
+    OTEL_EXPORTER_OTLP_CLIENT_KEY: "/tmp/certs/client.key"
+    # These default to "console", so only need to be set for other values
+    RAPIDS_JOB_ID: "Software Engineer"
+    RAPIDS_OTEL_TRACES_EXPORTER: "${{ inputs.traces-exporters || 'otlp' }}"
+    RAPIDS_OTEL_METRICS_EXPORTER: "${{ inputs.metrics-exporters || 'otlp' }}"
+    RAPIDS_OTEL_LOGS_EXPORTER: "${{ inputs.logs-exporters || 'otlp' }}"
 
 jobs:
   build:
@@ -54,6 +69,13 @@ jobs:
       - name: Get job traceparent
         uses: msarahan/shared-actions/telemetry-traceparent@telemetry-summarize
         id: job-traceparent
+      - name: Create job root trace
+        run: |
+           otel-cli span \
+                --force-trace-id "$(cut -d'-' -f2 <<<"${{steps.job-traceparent.outputs.traceparent}}")" \
+                --force-span-id "$(cut -d'-' -f3 <<<"${{steps.job-traceparent.outputs.traceparent}}")" \
+                --name "some dumb name"
+
 
       - name: Write certificate files
         run: |
@@ -71,31 +93,12 @@ jobs:
       - name: Run build
         env:
             TRACEPARENT: ${{ steps.job-traceparent.outputs.traceparent }}
-            # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
-            OTEL_EXPORTER_OTLP_ENDPOINT: "${{ inputs.default-endpoint }}"
-            OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ inputs.traces-endpoint }}"
-            OTEL_EXPORTER_OTLP_METRICS_ENDPOINT: "${{ inputs.metrics-endpoint }}"
-            OTEL_EXPORTER_OTLP_LOGS_ENDPOINT: "${{ inputs.logs-endpoint }}"
-            OTEL_EXPORTER_OTLP_PROTOCOL: "http/protobuf"
-            OTEL_EXPORTER_OTLP_HEADERS: ${{ secrets.OTEL_EXPORTER_OTLP_HEADERS }}
-            OTEL_EXPORTER_OTLP_CERTIFICATE: "/tmp/certs/ca.crt"
-            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: "/tmp/certs/client.crt"
-            OTEL_EXPORTER_OTLP_CLIENT_KEY: "/tmp/certs/client.key"
-            # These default to "console", so only need to be set for other values
-            RAPIDS_JOB_ID: "Software Engineer"
-            RAPIDS_OTEL_TRACES_EXPORTER: "${{ inputs.traces-exporters || 'otlp' }}"
-            RAPIDS_OTEL_METRICS_EXPORTER: "${{ inputs.metrics-exporters || 'otlp' }}"
-            RAPIDS_OTEL_LOGS_EXPORTER: "${{ inputs.logs-exporters || 'otlp' }}"
             RAPIDS_OTEL_SERVICE_NAME: "${{ env.otel-service-name }}"
         run: |
             rapids-conda-retry build click-feedstock
 
       - name: Test OTel export of job JSON
         uses: msarahan/shared-actions/telemetry-summarize@telemetry-summarize
-        env:
-            OTEL_EXPORTER_OTLP_CERTIFICATE: "/tmp/certs/ca.crt"
-            OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE: "/tmp/certs/client.crt"
-            OTEL_EXPORTER_OTLP_CLIENT_KEY: "/tmp/certs/client.key"
         with:
             endpoint: ${{ inputs.default-endpoint }}
             traceparent: ${{ steps.job-traceparent.outputs.traceparent }}
