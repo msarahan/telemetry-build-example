@@ -41,8 +41,8 @@ jobs:
       - name: Install OpenTelemetry instrumentation
         run: |
           pip install opentelemetry-distro[otlp] opentelemetry-exporter-prometheus
-          curl -L -o otel-cli-amd64.deb https://github.com/equinix-labs/otel-cli/releases/download/v0.4.5/otel-cli_0.4.5_linux_amd64.deb
-          dpkg -i otel-cli-amd64.deb
+          # curl -L -o otel-cli-amd64.deb https://github.com/equinix-labs/otel-cli/releases/download/v0.4.5/otel-cli_0.4.5_linux_amd64.deb
+          # dpkg -i otel-cli-amd64.deb
           git clone -b add-conda-build-instrumentation https://github.com/msarahan/opentelemetry-python-contrib
           pip install -e ./opentelemetry-python-contrib/instrumentation/opentelemetry-instrumentation-conda-build
           opentelemetry-bootstrap -a install
