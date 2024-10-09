@@ -83,8 +83,8 @@ jobs:
         id: job-traceparent
       - name: Create job root trace
         run: |
-           trace_id=$(cut -d'-' -f2 <<<"${{steps.job-traceparent.outputs.traceparent}}")
-           span_id=$(cut -d'-' -f3 <<<"${{steps.job-traceparent.outputs.traceparent}}")
+           trace_id=$(echo "${{steps.job-traceparent.outputs.traceparent}}" | cut -d'-' -f2)
+           span_id=$(echo "${{steps.job-traceparent.outputs.traceparent}}" | cut -d'-' -f3)
            otel-cli span --force-trace-id $trace_id --force-span-id $span_id --name "some dumb name"
 
       - name: Run build
