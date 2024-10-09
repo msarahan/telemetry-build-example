@@ -54,9 +54,6 @@ jobs:
       - name: Get job traceparent
         uses: msarahan/shared-actions/telemetry-traceparent@telemetry-summarize
         id: job-traceparent
-        with:
-            # We could also get the job name from the GHA info JSON provided by shared-actions/telemetry-setup action
-            job_name: "Super Duper Build Test"
 
       - name: Write certificate files
         run: |
@@ -71,15 +68,9 @@ jobs:
           ${{ secrets.OTEL_EXPORTER_OTLP_CLIENT_KEY }}
           EOF
 
-      - name: Get build step traceparent
-        uses: msarahan/shared-actions/telemetry-traceparent@telemetry-summarize
-        id: build-step-traceparent
-        with:
-            # We could also get the job name from the GHA info JSON provided by shared-actions/telemetry-setup action
-            step_name: "Run build"
       - name: Run build
         env:
-            TRACEPARENT: ${{ steps.build-step-traceparent.outputs.traceparent }}
+            TRACEPARENT: ${{ steps.job-traceparent.outputs.traceparent }}
             # This must be set for telemetry to be enabled. See rapids-otel-wrap script in gha-tools repo.
             OTEL_EXPORTER_OTLP_ENDPOINT: "${{ inputs.default-endpoint }}"
             OTEL_EXPORTER_OTLP_TRACES_ENDPOINT: "${{ inputs.traces-endpoint }}"
