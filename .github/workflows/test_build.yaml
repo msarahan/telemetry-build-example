@@ -90,7 +90,13 @@ jobs:
       - name: Run build
         env:
             TRACEPARENT: ${{ steps.job-traceparent.outputs.traceparent }}
-            RAPIDS_OTEL_SERVICE_NAME: "${{ env.otel-service-name }}"
+            # This is annoying. GitHub doesn't give us a good way to programmatically get the step name,
+            # so we have to put it in here so we can remember what it is.
+            #
+            # You only need to specify this if you have other telemetry running in a step, so that the
+            # names line up. If they don't line up, you'll have different blobs. The step name is used
+            # to compute the traceparent for the step, so it's very important that it lines up.
+            STEP_NAME: Run build
         run: |
             rapids-conda-retry build click-feedstock
 
