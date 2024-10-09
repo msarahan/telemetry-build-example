@@ -53,6 +53,18 @@ jobs:
         with:
           fetch-depth: 0
           persist-credentials: false
+      - name: Write certificate files
+        run: |
+          mkdir -p /tmp/certs
+          cat << EOF > /tmp/certs/ca.crt
+          ${{ secrets.OTEL_EXPORTER_OTLP_CERTIFICATE }}
+          EOF
+          cat << EOF > /tmp/certs/client.crt
+          ${{ secrets.OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE }}
+          EOF
+          cat << EOF > /tmp/certs/client.key
+          ${{ secrets.OTEL_EXPORTER_OTLP_CLIENT_KEY }}
+          EOF
       - name: Install OpenTelemetry instrumentation
         run: |
           pip install opentelemetry-distro[otlp] opentelemetry-exporter-prometheus
@@ -71,24 +83,9 @@ jobs:
         id: job-traceparent
       - name: Create job root trace
         run: |
-           otel-cli span \
-                --force-trace-id "$(cut -d'-' -f2 <<<"${{steps.job-traceparent.outputs.traceparent}}")" \
-                --force-span-id "$(cut -d'-' -f3 <<<"${{steps.job-traceparent.outputs.traceparent}}")" \
-                --name "some dumb name"
-
-
-      - name: Write certificate files
-        run: |
-          mkdir -p /tmp/certs
-          cat << EOF > /tmp/certs/ca.crt
-          ${{ secrets.OTEL_EXPORTER_OTLP_CERTIFICATE }}
-          EOF
-          cat << EOF > /tmp/certs/client.crt
-          ${{ secrets.OTEL_EXPORTER_OTLP_CLIENT_CERTIFICATE }}
-          EOF
-          cat << EOF > /tmp/certs/client.key
-          ${{ secrets.OTEL_EXPORTER_OTLP_CLIENT_KEY }}
-          EOF
+           trace_id=$(cut -d'-' -f2 <<<"${{steps.job-traceparent.outputs.traceparent}}")
+           span_id=$(cut -d'-' -f3 <<<"${{steps.job-traceparent.outputs.traceparent}}")
+           otel-cli span --force-trace-id $trace_id --force-span-id $span_id --name "some dumb name"
 
       - name: Run build
         env:
